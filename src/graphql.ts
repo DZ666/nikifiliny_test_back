@@ -33,12 +33,18 @@ export interface OrderItemOffer {
     article?: Nullable<string>;
 }
 
+export interface Property {
+    value: string;
+    code: string;
+}
+
 export interface OrderItem {
     id: number;
     status: string;
     quantity: number;
     offer?: Nullable<OrderItemOffer>;
     comment: string;
+    properties: Property[];
 }
 
 export interface Order {
@@ -47,7 +53,7 @@ export interface Order {
     site: string;
     createdAt: string;
     status: string;
-    delivery?: Nullable<OrderDelivery>;
+    delivery: OrderDelivery;
     items: Nullable<OrderItem>[];
 }
 

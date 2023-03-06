@@ -21,12 +21,18 @@ type OrderItemOffer {
     article: String
 }
 
+type Property {
+  value: String!
+  code: String!
+}
+
 type OrderItem {
     id: Int!
     status: String!
     quantity: Int!
     offer: OrderItemOffer
     comment: String!
+    properties: [Property!]!
 }
 
 type Order {
@@ -35,7 +41,7 @@ type Order {
     site: String!
     createdAt: String!
     status: String!
-    delivery: OrderDelivery
+    delivery: OrderDelivery!
     items: [OrderItem]!
 }
 

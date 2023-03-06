@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { CrmType, Order, OrdersFilter, RetailPagination } from './types'
 import axios, { AxiosInstance } from 'axios'
-import { ConcurrencyManager } from 'axios-concurrency'
-import { serialize } from '../tools'
 import { plainToClass } from 'class-transformer'
+import { OrdersResponse } from 'graphql'
+import getDeliveryCode, { DeliveryCode } from 'tools/getDeliveries'
+import getStatus, { Statuses } from 'tools/getStatuses'
+import mapOrders from 'tools/mapOrders'
+import { serialize } from '../tools'
+import { CrmType, Order, OrdersFilter, RetailPagination } from './types'
 
 @Injectable()
 export class RetailService {
@@ -13,11 +16,15 @@ export class RetailService {
     this.axios = axios.create({
       baseURL: `${process.env.RETAIL_URL}/api/v5`,
       timeout: 10000,
-      headers: { },
+      headers: {},
     })
 
     this.axios.interceptors.request.use((config) => {
       // console.log(config.url)
+      config.params = {
+        ...config.params,
+        apiKey: process.env.RETAIL_KEY,
+      }
       return config
     })
     this.axios.interceptors.response.use(
@@ -44,19 +51,44 @@ export class RetailService {
     return [orders, pagination]
   }
 
-  async findOrder(id: string): Promise<Order | null> {
+  async findOrderList(page: number): Promise<OrdersResponse> {
+    return this.orders({ page }).then(([orders, pagination]) => {
+      return {
+        orders: mapOrders<any, Order[]>(orders),
+        pagination,
+      }
+    }) as unknown as OrdersResponse
+  }
 
+  async findOrder(id: string): Promise<Order | null> {
+    return this.orders({ filter: { numbers: [id] } }).then(([orders]) => {
+      if (!orders.length) return null
+
+      return mapOrders<any, Order>(orders[0])
+    })
   }
 
   async orderStatuses(): Promise<CrmType[]> {
-
+    const statuses = Object.entries(Statuses)
+    const statusesCodes = statuses.map(([key]) => {
+      return getStatus(key)
+    })
+    return statusesCodes
   }
 
   async productStatuses(): Promise<CrmType[]> {
-
+    const statuses = Object.entries(Statuses)
+    const statusesCodes = statuses.map(([key]) => {
+      return getStatus(key)
+    })
+    return statusesCodes
   }
 
   async deliveryTypes(): Promise<CrmType[]> {
-
+    const deliveryCodes = Object.entries(DeliveryCode)
+    const deliveryTypes = deliveryCodes.map(([key]) => {
+      return getDeliveryCode(key)
+    })
+    return deliveryTypes
   }
 }

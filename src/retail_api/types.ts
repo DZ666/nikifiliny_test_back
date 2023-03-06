@@ -70,4 +70,3 @@ export class Order {
   site: string
   orderType: string
 }
-
